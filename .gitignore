@@ -8,8 +8,8 @@
 /notebooks/
 
 /deploy/*.conf
-src/gatherer/config/*
-!src/gatherer/config/examples/
+src/notifier/config/*
+!src/notifier/config/examples/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

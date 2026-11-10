@@ -10,5 +10,11 @@ def handle(args):
         args.print_help()
 
 
-def foo(args):
-    print('Foo')
+def push(args):
+    from notifier.services import pusher
+
+    pusher.send(args.title, args.body)
+
+
+def email(args):
+    ...

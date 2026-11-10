@@ -5,9 +5,9 @@ description = "Notifier CLI application"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "PyYAML == 6.0.3",
-    "load_dotenv",
-    "firebase-admin",
+    "PyYAML==6.0.3",
+    "load_dotenv==0.1.0",
+    "firebase-admin==7.7.0",
 ]
 
 [project.optional-dependencies]
