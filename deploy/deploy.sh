@@ -19,10 +19,11 @@ usage() {
     exit 1
 }
 
-[[ $# -eq 2 ]] || usage
+[[ $# -eq 3 ]] || usage
 
 TARGET="$1"
 CONFIG="$2"
+VAULT="$3"
 
 # Load target configuration.
 [[ -f "$CONF_FILE" ]] || {
@@ -41,17 +42,18 @@ fi
 IFS=':' read -r HOST USER TARGET_ROOT <<< "${TARGETS[$TARGET]}"
 
 TARGET_PATH="$TARGET_ROOT/apps/notifier"
+VAULT_PATH="$TARGET_ROOT/vault"
 
 case "$HOST" in
     local|localhost|127.0.0.1)
         DESTINATION="$TARGET_PATH"
         echo "Deploying locally to '$DESTINATION'..."
-        mkdir -p "$DESTINATION"
+        mkdir -p "$DESTINATION" "$VAULT_PATH"
         ;;
     *)
         DESTINATION="$USER@$HOST:$TARGET_PATH"
         echo "Creating remote directory '$TARGET_PATH' on host '$HOST'..."
-        ssh "$USER@$HOST" "mkdir -p '$TARGET_PATH'"
+        ssh "$USER@$HOST" "mkdir -p '$TARGET_PATH' '$VAULT_PATH'" 
         ;;
 esac
 
@@ -90,5 +92,25 @@ echo "Copying $CONFIG config to $CONFIG_DEST/"
 rsync -av --chmod=D700,F600 --delete \
     "$NOTIFIER/src/notifier/config/$CONFIG/" \
     "$CONFIG_DEST/"
+
+# Copy vault
+VAULT_DEST="$USER@$HOST:$VAULT_PATH"
+
+echo "Copying vault to $VAULT_DEST/"
+
+rsync -avL --chmod=D700,F600 --delete \
+    "$VAULT/" \
+    "$VAULT_DEST/"
+
+case "$HOST" in
+    local|localhost|127.0.0.1)
+        echo "Running install script '$TARGET_ROOT/scripts/install.sh' with target path '$TARGET_PATH'..."
+        bash "$TARGET_ROOT/scripts/install.sh" "$TARGET_PATH"
+        ;;
+    *)
+        echo "Running remote install script '$TARGET_ROOT/scripts/install.sh' with target path '$TARGET_PATH' on host '$HOST'..."
+        ssh "$USER@$HOST" "bash '$TARGET_ROOT/scripts/install.sh' '$TARGET_PATH'"
+        ;;
+esac
 
 echo "Deployment complete: config='$CONFIG', target='$TARGET', destination='$DESTINATION'."
